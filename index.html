@@ -177,33 +177,39 @@
   }
 
   function closeModal() {
-    deleteId = null;
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+
+ async function confirmDelete() {
+  if (deleteId === null) {
+    console.error("No deleteId set");
+    return;
   }
 
-  async function confirmDelete() {
-    if (!deleteId) return;
+  setLoading(true);
 
-    closeModal();
-    setLoading(true);
+  try {
+    const res = await fetch(API + "/budget/" + deleteId, {
+      method: "DELETE"
+    });
 
-    try {
-      const res = await fetch(API + "/budget/" + deleteId, {
-        method: "DELETE"
-      });
-
-      if (!res.ok) throw new Error("Delete failed");
-
-      await loadBudgets();
-    } catch (err) {
-      alert("Failed to delete item");
-      console.error(err);
-    } finally {
-      setLoading(false);
-      deleteId = null;
+    if (!res.ok) {
+      throw new Error("Delete failed");
     }
+
+    await loadBudgets();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to delete item");
+  } finally {
+    deleteId = null;   // ✅ clear ONLY after delete
+    closeModal();
+    setLoading(false);
   }
+}
+
 
   window.onload = loadBudgets;
 </script>
