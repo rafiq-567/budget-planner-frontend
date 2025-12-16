@@ -58,7 +58,7 @@
 
 <script>
 
-const API = "https://budget-planner-api.workers.dev"; 
+const API = "https://budget-planner-api.budget-planner-api.workers.dev"; 
 
 
 const nameInput = document.getElementById("nameInput");
@@ -75,7 +75,7 @@ let deleteId = null;
 function setLoading(isLoading) {
   if (isLoading) {
     loading.classList.remove("hidden");
-    list.innerHTML = ""; // Clear list while loading
+    list.innerHTML = ""; 
   } else {
     loading.classList.add("hidden");
   }
