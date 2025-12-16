@@ -127,7 +127,8 @@ async function loadBudgets() {
   setLoading(true);
 
   try {
-    const res = await fetch(API + "/budget");
+    const res = await fetch(API + "/budget?ts=" + Date.now());
+
     const data = await res.json();
 
     if (data.length === 0) {
