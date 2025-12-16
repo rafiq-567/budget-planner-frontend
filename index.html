@@ -10,7 +10,7 @@
       padding: 40px;
     }
     .card {
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
       background: white;
       padding: 20px;
@@ -27,12 +27,21 @@
       color: white;
       border: none;
       cursor: pointer;
+      border-radius: 6px;
     }
     .item {
       margin-top: 10px;
       padding: 10px;
       background: #eef2ff;
       border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .delete-btn {
+      background: #ef4444;
+      padding: 6px 10px;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -49,53 +58,67 @@
     <div id="list"></div>
   </div>
 
- <script>
-  const API = "https://budget-planner-api.budget-planner-api.workers.dev";
+  <script>
+    const API = "https://budget-planner-api.budget-planner-api.workers.dev";
 
+    const nameInput = document.getElementById("name");
+    const amountInput = document.getElementById("amount");
+    const interestInput = document.getElementById("interest");
+    const list = document.getElementById("list");
 
-  const nameInput = document.getElementById("name");
-  const amountInput = document.getElementById("amount");
-  const interestInput = document.getElementById("interest");
-  const list = document.getElementById("list");
+    async function saveBudget() {
+      const payload = {
+        name: nameInput.value,
+        amount: Number(amountInput.value),
+        interest: interestInput.value
+      };
 
-  async function saveBudget() {
-    const payload = {
-      name: nameInput.value,
-      amount: Number(amountInput.value),
-      interest: interestInput.value
-    };
+      const res = await fetch(API + "/budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-    const res = await fetch(API + "/budget", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+      if (!res.ok) {
+        alert("Failed to save budget");
+        return;
+      }
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || "Failed to save budget");
-      return;
+      nameInput.value = "";
+      amountInput.value = "";
+      interestInput.value = "";
+
+      loadBudgets();
     }
 
-    nameInput.value = "";
-    amountInput.value = "";
-    interestInput.value = "";
+    async function deleteBudget(id) {
+      await fetch(API + "/budget/" + id, {
+        method: "DELETE"
+      });
+      loadBudgets();
+    }
+
+    async function loadBudgets() {
+      const res = await fetch(API + "/budget");
+      const data = await res.json();
+
+      list.innerHTML = data.map(
+        b => `
+          <div class="item">
+            <div>
+              <strong>${b.name}</strong><br/>
+              $${b.amount} (${b.interest})
+            </div>
+            <button class="delete-btn" onclick="deleteBudget(${b.id})">
+              Delete
+            </button>
+          </div>
+        `
+      ).join("");
+    }
 
     loadBudgets();
-  }
-
-  async function loadBudgets() {
-    const res = await fetch(API + "/budget");
-    const data = await res.json();
-
-    list.innerHTML = data.map(
-      b => `<div class="item">${b.name} — $${b.amount} (${b.interest})</div>`
-    ).join("");
-  }
-
-  loadBudgets();
-</script>
-
+  </script>
 
 </body>
 </html>
