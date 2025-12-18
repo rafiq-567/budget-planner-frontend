@@ -15,17 +15,25 @@
     <h2 class="text-center text-indigo-600 text-3xl font-extrabold mb-6 tracking-tight">Budget Planner</h2>
 
     <div class="space-y-3">
-        <input id="name" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Expense Name" />
-        <input id="amount" type="number" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Amount ($)" />
-        <input id="interest" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Notes/Interest" />
+        <input id="name" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Expense Name" />
+        <input id="amount" type="number" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Amount ($)" />
+        <input id="interest" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Notes/Interest" />
 
-        <button id="saveBtn" class="w-full p-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-transform shadow-lg shadow-indigo-200">
-            Save Budget
+        <button id="saveBtn" class="flex items-center justify-center gap-2 w-full p-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:bg-indigo-300">
+            <span id="btnText">Save Budget</span>
+            <svg id="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
         </button>
     </div>
 
-    <div id="list" class="mt-8 space-y-4">
-        </div>
+    <div class="mt-8 p-4 bg-slate-800 rounded-xl text-white flex justify-between items-center shadow-inner">
+        <span class="text-sm font-medium text-slate-400 uppercase tracking-widest">Total Spent</span>
+        <span id="totalDisplay" class="text-2xl font-black text-emerald-400">$0</span>
+    </div>
+
+    <div id="list" class="mt-6 space-y-4"></div>
   </div>
 
 <script>
@@ -36,32 +44,40 @@
   const interestInput = document.getElementById("interest");
   const list = document.getElementById("list");
   const saveBtn = document.getElementById("saveBtn");
+  const btnText = document.getElementById("btnText");
+  const spinner = document.getElementById("spinner");
+  const totalDisplay = document.getElementById("totalDisplay");
 
-  // --- ENHANCED ANIMATIONS ---
+  let currentTotal = 0;
+
+  // --- ANIMATIONS ---
+
+  function animateTotal(newTotal) {
+    const obj = { val: currentTotal };
+    anime({
+      targets: obj,
+      val: newTotal,
+      round: 1,
+      duration: 600,
+      easing: 'easeOutExpo',
+      update: () => {
+        totalDisplay.innerHTML = `$${obj.val}`;
+      }
+    });
+    currentTotal = newTotal;
+  }
 
   function animateListIn() {
-    // Staggered entrance for all items in the list
     anime({
       targets: '.item',
       opacity: [0, 1],
       translateX: [-20, 0],
-      delay: anime.stagger(100), 
+      delay: anime.stagger(100),
       easing: 'easeOutElastic(1, .8)'
     });
   }
 
-  function animateSingleIn(el) {
-    anime({
-      targets: el,
-      opacity: [0, 1],
-      scale: [0.9, 1],
-      duration: 800,
-      easing: "easeOutElastic(1, .5)"
-    });
-  }
-
   async function animateDelete(el) {
-    // 1. Fade out and slide right
     await anime({
       targets: el,
       opacity: 0,
@@ -70,14 +86,12 @@
       easing: 'easeInQuint'
     }).finished;
 
-    // 2. Collapse the height so items below slide up smoothly
     await anime({
       targets: el,
       height: 0,
       marginTop: 0,
       marginBottom: 0,
-      paddingTop: 0,
-      paddingBottom: 0,
+      padding: 0,
       duration: 300,
       easing: 'easeInOutQuad'
     }).finished;
@@ -85,29 +99,19 @@
     el.remove();
   }
 
-  function flashSuccess(el) {
-    anime({
-      targets: el,
-      backgroundColor: ['#eef2ff', '#dcfce7', '#eef2ff'], // Blue to Green back to Blue
-      duration: 1000,
-      easing: 'easeInOutQuad'
-    });
-  }
-
-  // --- LOGIC ---
+  // --- CORE LOGIC ---
 
   function createItemHTML(budget, pending = false) {
     return `
-      <div class="item ${pending ? "opacity-50" : ""} group relative p-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:shadow-md transition-shadow overflow-hidden" data-id="${budget.id}">
+      <div class="item ${pending ? "opacity-50" : ""} group p-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:shadow-md transition-all" data-id="${budget.id}">
         <div class="flex justify-between items-center">
             <div class="flex flex-col">
-                <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Entry</span>
-                <strong class="text-slate-800 text-lg">${budget.name}</strong> 
-                <small class="text-slate-500 italic">${budget.interest || 'No notes'}</small>
+                <strong class="text-slate-800 text-lg leading-tight">${budget.name}</strong> 
+                <small class="text-slate-500 italic mt-1 text-xs">${budget.interest || 'No notes'}</small>
             </div>
             <div class="text-right">
                 <span class="block text-xl font-black text-indigo-600">$${budget.amount}</span>
-                <button class="text-xs text-red-400 hover:text-red-600 font-semibold underline mt-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteBudget('${budget.id}')">
+                <button class="text-xs text-red-400 hover:text-red-600 font-bold uppercase tracking-tighter mt-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteBudget('${budget.id}', ${budget.amount})">
                   Remove
                 </button>
             </div>
@@ -116,29 +120,27 @@
     `;
   }
 
+  function setButtonLoading(isLoading) {
+    saveBtn.disabled = isLoading;
+    if (isLoading) {
+        btnText.innerText = "Saving...";
+        spinner.classList.remove('hidden');
+    } else {
+        btnText.innerText = "Save Budget";
+        spinner.classList.add('hidden');
+    }
+  }
+
   async function saveBudget() {
     if (!nameInput.value || !amountInput.value) return;
 
-    // Button elastic feedback
-    anime({
-      targets: saveBtn,
-      scale: [1, 0.9, 1.05, 1],
-      duration: 400
-    });
+    setButtonLoading(true);
 
-    const tempId = "temp-" + Date.now();
     const payload = {
       name: nameInput.value,
       amount: Number(amountInput.value),
       interest: interestInput.value
     };
-
-    list.insertAdjacentHTML("afterbegin", createItemHTML({ ...payload, id: tempId }, true));
-    const tempEl = list.querySelector(`[data-id="${tempId}"]`);
-    animateSingleIn(tempEl);
-
-    // Clear inputs
-    [nameInput, amountInput, interestInput].forEach(i => i.value = "");
 
     try {
       const res = await fetch(API + "/budget", {
@@ -149,12 +151,15 @@
 
       if (!res.ok) throw new Error();
       
-      // Update UI to show success
-      tempEl.classList.remove('opacity-50');
-      flashSuccess(tempEl);
+      // Success: Reload everything to get the real database ID
+      await loadBudgets();
+      
+      // Clear inputs
+      [nameInput, amountInput, interestInput].forEach(i => i.value = "");
     } catch {
-      alert("Failed to save budget");
-      animateDelete(tempEl);
+      alert("Error saving budget");
+    } finally {
+      setButtonLoading(false);
     }
   }
 
@@ -162,20 +167,27 @@
     const res = await fetch(API + "/budget?ts=" + Date.now());
     const data = await res.json();
 
+    let total = 0;
     list.innerHTML = "";
+    
     data.forEach(budget => {
+      total += Number(budget.amount);
       list.insertAdjacentHTML("beforeend", createItemHTML(budget));
     });
     
+    animateTotal(total);
     animateListIn();
   }
 
-  async function deleteBudget(id) {
+  async function deleteBudget(id, amount) {
     const el = document.querySelector(`[data-id="${id}"]`);
     if (!el) return;
 
+    // Update total immediately for better feel
+    animateTotal(currentTotal - amount);
     await animateDelete(el);
-    fetch(API + "/budget/" + id, { method: "DELETE" });
+    
+    await fetch(API + "/budget/" + id, { method: "DELETE" });
   }
 
   saveBtn.addEventListener("click", saveBudget);
