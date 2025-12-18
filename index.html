@@ -3,26 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget Planner</title>
+  <title>Budget Planner Pro</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 </head>
 
-<body class="bg-[#f5f7fa] p-10 font-sans">
+<body class="bg-[#f0f2f5] p-6 md:p-12 font-sans">
 
-  <div class="max-w-[420px] mx-auto bg-white p-5 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
-    <h2 class="text-center text-[#4f46e5] text-2xl font-bold mb-4">Budget Planner</h2>
+  <div class="max-w-[450px] mx-auto bg-white p-6 rounded-2xl shadow-2xl border border-gray-100">
+    <h2 class="text-center text-indigo-600 text-3xl font-extrabold mb-6 tracking-tight">Budget Planner</h2>
 
-    <input id="name" class="w-full p-2.5 mt-2.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Your name" />
-    <input id="amount" type="number" class="w-full p-2.5 mt-2.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Budget amount" />
-    <input id="interest" class="w-full p-2.5 mt-2.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Interest" />
+    <div class="space-y-3">
+        <input id="name" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Expense Name" />
+        <input id="amount" type="number" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Amount ($)" />
+        <input id="interest" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-400" placeholder="Notes/Interest" />
 
-    <button id="saveBtn" class="w-full p-2.5 mt-2.5 text-sm bg-[#4f46e5] text-white rounded-md cursor-pointer hover:bg-[#4338ca] transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-medium">
-        Save Budget
-    </button>
+        <button id="saveBtn" class="w-full p-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-transform shadow-lg shadow-indigo-200">
+            Save Budget
+        </button>
+    </div>
 
-    <div id="list" class="mt-4"></div>
+    <div id="list" class="mt-8 space-y-4">
+        </div>
   </div>
 
 <script>
@@ -34,40 +37,81 @@
   const list = document.getElementById("list");
   const saveBtn = document.getElementById("saveBtn");
 
-  function animateIn(el) {
+  // --- ENHANCED ANIMATIONS ---
+
+  function animateListIn() {
+    // Staggered entrance for all items in the list
     anime({
-      targets: el,
+      targets: '.item',
       opacity: [0, 1],
-      translateY: [10, 0],
-      duration: 400,
-      easing: "easeOutQuad"
+      translateX: [-20, 0],
+      delay: anime.stagger(100), 
+      easing: 'easeOutElastic(1, .8)'
     });
   }
 
-  function animateOut(el) {
-    return anime({
+  function animateSingleIn(el) {
+    anime({
       targets: el,
-      opacity: [1, 0],
-      translateY: [0, 10],
-      duration: 300,
-      easing: "easeInQuad"
-    }).finished;
+      opacity: [0, 1],
+      scale: [0.9, 1],
+      duration: 800,
+      easing: "easeOutElastic(1, .5)"
+    });
   }
 
+  async function animateDelete(el) {
+    // 1. Fade out and slide right
+    await anime({
+      targets: el,
+      opacity: 0,
+      translateX: 50,
+      duration: 300,
+      easing: 'easeInQuint'
+    }).finished;
+
+    // 2. Collapse the height so items below slide up smoothly
+    await anime({
+      targets: el,
+      height: 0,
+      marginTop: 0,
+      marginBottom: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
+      duration: 300,
+      easing: 'easeInOutQuad'
+    }).finished;
+    
+    el.remove();
+  }
+
+  function flashSuccess(el) {
+    anime({
+      targets: el,
+      backgroundColor: ['#eef2ff', '#dcfce7', '#eef2ff'], // Blue to Green back to Blue
+      duration: 1000,
+      easing: 'easeInOutQuad'
+    });
+  }
+
+  // --- LOGIC ---
+
   function createItemHTML(budget, pending = false) {
-    // Tailwind classes applied inside the template string
     return `
-      <div class="item ${pending ? "pending opacity-60" : ""} mt-3 p-3 bg-[#eef2ff] rounded-md shadow-sm" data-id="${budget.id}">
-        <div class="flex justify-between items-start">
-            <div>
-                <strong class="text-slate-800">${budget.name}</strong> 
-                <span class="text-indigo-600 font-bold">— $${budget.amount}</span>
-                <small class="block text-slate-500 mt-1 italic">${budget.interest || 'No interest'}</small>
+      <div class="item ${pending ? "opacity-50" : ""} group relative p-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:shadow-md transition-shadow overflow-hidden" data-id="${budget.id}">
+        <div class="flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Entry</span>
+                <strong class="text-slate-800 text-lg">${budget.name}</strong> 
+                <small class="text-slate-500 italic">${budget.interest || 'No notes'}</small>
+            </div>
+            <div class="text-right">
+                <span class="block text-xl font-black text-indigo-600">$${budget.amount}</span>
+                <button class="text-xs text-red-400 hover:text-red-600 font-semibold underline mt-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteBudget('${budget.id}')">
+                  Remove
+                </button>
             </div>
         </div>
-        <button class="delete-btn mt-2 bg-red-500 text-white text-xs p-2 w-full rounded hover:bg-red-600 transition-colors cursor-pointer" onclick="deleteBudget('${budget.id}')">
-          Delete
-        </button>
       </div>
     `;
   }
@@ -75,32 +119,26 @@
   async function saveBudget() {
     if (!nameInput.value || !amountInput.value) return;
 
+    // Button elastic feedback
     anime({
       targets: saveBtn,
-      scale: [1, 0.95, 1],
-      duration: 200,
-      easing: "easeOutQuad"
+      scale: [1, 0.9, 1.05, 1],
+      duration: 400
     });
 
     const tempId = "temp-" + Date.now();
-
     const payload = {
       name: nameInput.value,
       amount: Number(amountInput.value),
       interest: interestInput.value
     };
 
-    list.insertAdjacentHTML(
-      "afterbegin",
-      createItemHTML({ ...payload, id: tempId }, true)
-    );
-
+    list.insertAdjacentHTML("afterbegin", createItemHTML({ ...payload, id: tempId }, true));
     const tempEl = list.querySelector(`[data-id="${tempId}"]`);
-    animateIn(tempEl);
+    animateSingleIn(tempEl);
 
-    nameInput.value = "";
-    amountInput.value = "";
-    interestInput.value = "";
+    // Clear inputs
+    [nameInput, amountInput, interestInput].forEach(i => i.value = "");
 
     try {
       const res = await fetch(API + "/budget", {
@@ -110,11 +148,13 @@
       });
 
       if (!res.ok) throw new Error();
-      loadBudgets();
+      
+      // Update UI to show success
+      tempEl.classList.remove('opacity-50');
+      flashSuccess(tempEl);
     } catch {
       alert("Failed to save budget");
-      await animateOut(tempEl);
-      tempEl.remove();
+      animateDelete(tempEl);
     }
   }
 
@@ -123,24 +163,19 @@
     const data = await res.json();
 
     list.innerHTML = "";
-
     data.forEach(budget => {
       list.insertAdjacentHTML("beforeend", createItemHTML(budget));
-      const el = list.lastElementChild;
-      animateIn(el);
     });
+    
+    animateListIn();
   }
 
   async function deleteBudget(id) {
     const el = document.querySelector(`[data-id="${id}"]`);
     if (!el) return;
 
-    await animateOut(el);
-    el.remove();
-
-    fetch(API + "/budget/" + id, {
-      method: "DELETE"
-    });
+    await animateDelete(el);
+    fetch(API + "/budget/" + id, { method: "DELETE" });
   }
 
   saveBtn.addEventListener("click", saveBudget);
