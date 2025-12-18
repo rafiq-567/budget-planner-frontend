@@ -13,12 +13,14 @@
     body { font-family: 'Inter', sans-serif; }
     .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     .custom-shadow { box-shadow: 0 20px 50px -12px rgba(79, 70, 229, 0.1); }
+    /* Prevent horizontal scroll during shake */
+    .shake-container { will-change: transform; }
   </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen text-slate-900 overflow-x-hidden border-4 border-gray-700>
+<body class="bg-slate-50 min-h-screen text-slate-900 overflow-x-hidden">
 
-  <div id="toast" class="fixed top-6 right-6 z-50 transform translate-x-80 opacity-0 transition-all">
+  <div id="toast" class="fixed top-6 right-6 z-50 opacity-0 pointer-events-none">
     <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
         <span id="toastMsg">Success!</span>
     </div>
@@ -28,7 +30,7 @@
     
     <header class="mb-10 flex justify-between items-end">
         <div>
-            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Nexus <span class="text-indigo-700">Budget.</span></h1>
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Nexus <span class="text-indigo-600">Budget.</span></h1>
             <p class="text-slate-500 font-medium">Manage your expenses.</p>
         </div>
         <div class="text-right">
@@ -37,15 +39,15 @@
         </div>
     </header>
 
-    <section class="glass border border-white p-8 rounded-[2rem] custom-shadow mb-10">
-        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
-             New Entry
+    <section id="entryCard" class="glass border border-white p-8 rounded-[2rem] custom-shadow mb-10 shake-container">
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-700">
+            <span class="w-2 h-6 bg-indigo-600 rounded-full"></span> New Entry
         </h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1">
                 <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Name</label>
-                <input id="name" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="John doe" />
+                <input id="name" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="e.g. Groceries" />
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Amount</label>
@@ -54,11 +56,11 @@
         </div>
 
         <div class="mt-4 space-y-1">
-            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Interest</label>
+            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Notes / Interest</label>
             <input id="interest" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="Optional notes" />
         </div>
 
-        <button id="saveBtn" class="group mt-8 w-full bg-indigo-600 hover:bg-slate-900 text-white p-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all">
+        <button id="saveBtn" class="group mt-8 w-full bg-indigo-600 hover:bg-slate-900 text-white p-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95">
             <span id="btnText">Add Budget</span>
             <div id="spinner" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         </button>
@@ -71,7 +73,7 @@
     
     <div id="list" class="space-y-4">
         <div id="emptyState" class="text-center py-20 opacity-50">
-            <p class="text-slate-400">No transactions recorded yet.</p>
+            <p class="text-slate-400 font-medium">No transactions recorded yet.</p>
         </div>
     </div>
   </div>
@@ -89,30 +91,54 @@
     total: document.getElementById("totalDisplay"),
     empty: document.getElementById("emptyState"),
     count: document.getElementById("itemCount"),
-    toast: document.getElementById("toast")
+    toast: document.getElementById("toast"),
+    entryCard: document.getElementById("entryCard")
   };
 
   let currentTotal = 0;
 
- 
+  // --- ANIMATIONS ---
 
   function showToast(msg) {
     document.getElementById("toastMsg").innerText = msg;
+    
+    // Stop any current animation to prevent getting stuck
+    anime.remove(elements.toast);
+
     anime.timeline()
       .add({
         targets: elements.toast,
-        translateX: [100, 0],
+        translateX: [200, 0],
         opacity: [0, 1],
         easing: 'easeOutElastic(1, .8)',
         duration: 800
       })
       .add({
         targets: elements.toast,
-        translateX: 100,
+        translateX: 200,
         opacity: 0,
-        delay: 2000,
-        easing: 'easeInBack'
+        delay: 2500,
+        easing: 'easeInBack',
+        duration: 500
       });
+  }
+
+  function shakeInputs() {
+    // Advanced shake animation using keyframes
+    anime({
+      targets: elements.entryCard,
+      translateX: [
+        { value: -10, duration: 100, easing: 'easeInOutQuad' },
+        { value: 10, duration: 100, easing: 'easeInOutQuad' },
+        { value: -10, duration: 100, easing: 'easeInOutQuad' },
+        { value: 10, duration: 100, easing: 'easeInOutQuad' },
+        { value: 0, duration: 100, easing: 'easeInOutQuad' }
+      ],
+      borderLeft: [
+        { value: '4px solid #f87171', duration: 100 },
+        { value: '1px solid white', delay: 400 }
+      ]
+    });
   }
 
   function animateTotalChange(newTotal) {
@@ -123,16 +149,16 @@
       round: 1,
       duration: 1000,
       easing: 'easeOutExpo',
-      update: () => { elements.total.innerHTML = `$${obj.val.toLocaleString()}`; }
+      update: () => { elements.total.innerHTML = `$${obj.val.toLocaleString(undefined, {minimumFractionDigits: 2})}`; }
     });
     currentTotal = newTotal;
   }
 
-  
+  // --- CORE LOGIC ---
 
   function createItemHTML(budget) {
     return `
-      <div class="item glass group p-5 rounded-[1.5rem] border border-white flex justify-between items-center transition-all hover:scale-[1.02] hover:shadow-xl" data-id="${budget.id}">
+      <div class="item glass group p-5 rounded-[1.5rem] border border-white flex justify-between items-center transition-all hover:scale-[1.01] hover:shadow-xl" data-id="${budget.id}">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,12 +167,12 @@
             </div>
             <div>
                 <p class="font-bold text-slate-800">${budget.name}</p>
-                <p class="text-xs text-slate-400 font-medium">${budget.interest || 'Immediate'}</p>
+                <p class="text-xs text-slate-400 font-medium italic">${budget.interest || 'No notes'}</p>
             </div>
         </div>
         <div class="text-right">
-            <p class="text-lg font-black text-slate-900">$${Number(budget.amount).toLocaleString()}</p>
-            <button onclick="deleteBudget('${budget.id}', ${budget.amount})" class="text-[10px] font-bold text-red-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all cursor-pointer">Delete</button>
+            <p class="text-lg font-black text-slate-900">$${Number(budget.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+            <button onclick="deleteBudget('${budget.id}', ${budget.amount})" class="text-[10px] font-bold text-red-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:text-red-600">Remove</button>
         </div>
       </div>
     `;
@@ -183,11 +209,14 @@
   }
 
   async function saveBudget() {
+    // 1. Validation & Shake
     if (!elements.name.value || !elements.amount.value) {
-        showToast("Fill required fields");
+        shakeInputs();
+        showToast("Please fill Name and Amount");
         return;
     }
 
+    // 2. Button State
     elements.saveBtn.disabled = true;
     elements.btnText.innerText = "Processing...";
     elements.spinner.classList.remove('hidden');
@@ -207,11 +236,11 @@
 
       if (!res.ok) throw new Error();
       
-      showToast("Transaction Successful");
+      showToast("Budget Added Successfully");
       elements.name.value = elements.amount.value = elements.interest.value = "";
       await loadBudgets();
     } catch {
-      showToast("System Error");
+      showToast("Network Error: Failed to save");
     } finally {
       elements.saveBtn.disabled = false;
       elements.btnText.innerText = "Add Budget";
@@ -233,6 +262,7 @@
 
     await fetch(API + "/budget/" + id, { method: "DELETE" });
     loadBudgets();
+    showToast("Item Removed");
   }
 
   elements.saveBtn.addEventListener("click", saveBudget);
