@@ -4,112 +4,57 @@
   <meta charset="UTF-8" />
   <title>Budget Planner</title>
 
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Anime.js -->
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      padding: 40px;
-    }
-
-    .card {
-      max-width: 420px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      color: #4f46e5;
-      margin-bottom: 16px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-
-    button {
-      background: #4f46e5;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    button:hover {
-      background: #4338ca;
-    }
-
-    .item {
-      margin-top: 12px;
-      padding: 12px;
-      background: #eef2ff;
-      border-radius: 6px;
-    }
-
-    .item.pending {
-      opacity: 0.6;
-    }
-
-    .item small {
-      color: #555;
-      display: block;
-      margin-top: 4px;
-    }
-
-    .delete-btn {
-      margin-top: 8px;
-      background: #ef4444;
-      color: white;
-      border: none;
-      padding: 6px;
-      width: 100%;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .delete-btn:hover {
-      background: #dc2626;
-    }
-  </style>
 </head>
 
-<body>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-6 font-sans">
 
-  <div class="card">
-    <h2>Budget Planner</h2>
+  <div class="w-full max-w-md bg-white rounded-xl shadow-2xl p-6">
+    <h2 class="text-center text-2xl font-extrabold text-indigo-600 mb-4">
+      Budget Planner
+    </h2>
 
-    <input id="name" placeholder="Your name" />
-    <input id="amount" type="number" placeholder="Budget amount" />
-    <input id="interest" placeholder="Interest" />
+    <input
+      id="name"
+      placeholder="Your name"
+      class="w-full border border-gray-300 rounded-lg p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
 
-    <button id="saveBtn">Save Budget</button>
+    <input
+      id="amount"
+      type="number"
+      placeholder="Budget amount"
+      class="w-full border border-gray-300 rounded-lg p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
 
-    <div id="list"></div>
+    <input
+      id="interest"
+      placeholder="Interest"
+      class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+
+    <button
+      id="saveBtn"
+      class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-indigo-700 active:scale-95 transition"
+    >
+      Save Budget
+    </button>
+
+    <div id="list" class="mt-6 space-y-3"></div>
   </div>
 
 <script>
-  const API = "https://budget-planner-api.budget-planner-api.workers.dev";
+  const API = "https://budget-planner-api.workers.dev";
 
   const nameInput = document.getElementById("name");
   const amountInput = document.getElementById("amount");
   const interestInput = document.getElementById("interest");
   const list = document.getElementById("list");
   const saveBtn = document.getElementById("saveBtn");
-
- 
 
   function animateIn(el) {
     anime({
@@ -133,22 +78,29 @@
 
   function createItemHTML(budget, pending = false) {
     return `
-      <div class="item ${pending ? "pending" : ""}" data-id="${budget.id}">
-        <strong>${budget.name}</strong> — $${budget.amount}
-        <small>${budget.interest}</small>
-        <button class="delete-btn" onclick="deleteBudget('${budget.id}')">
+      <div
+        class="flex justify-between items-center bg-indigo-50 p-4 rounded-lg shadow-sm
+               ${pending ? "opacity-60" : ""}"
+        data-id="${budget.id}"
+      >
+        <div>
+          <p class="font-bold text-indigo-800">${budget.name}</p>
+          <p class="text-sm text-gray-700">$${budget.amount} (${budget.interest})</p>
+        </div>
+
+        <button
+          onclick="deleteBudget('${budget.id}')"
+          class="text-red-500 hover:text-red-700 font-medium"
+        >
           Delete
         </button>
       </div>
     `;
   }
 
- 
-
   async function saveBudget() {
     if (!nameInput.value || !amountInput.value) return;
 
-  
     anime({
       targets: saveBtn,
       scale: [1, 0.95, 1],
@@ -164,7 +116,6 @@
       interest: interestInput.value
     };
 
-   
     list.insertAdjacentHTML(
       "afterbegin",
       createItemHTML({ ...payload, id: tempId }, true)
@@ -186,7 +137,6 @@
 
       if (!res.ok) throw new Error();
 
-      
       loadBudgets();
     } catch {
       alert("Failed to save budget");
@@ -194,8 +144,6 @@
       tempEl.remove();
     }
   }
-
-
 
   async function loadBudgets() {
     const res = await fetch(API + "/budget?ts=" + Date.now());
@@ -205,12 +153,9 @@
 
     data.forEach(budget => {
       list.insertAdjacentHTML("beforeend", createItemHTML(budget));
-      const el = list.lastElementChild;
-      animateIn(el);
+      animateIn(list.lastElementChild);
     });
   }
-
- 
 
   async function deleteBudget(id) {
     const el = document.querySelector(`[data-id="${id}"]`);
@@ -219,15 +164,10 @@
     await animateOut(el);
     el.remove();
 
-    fetch(API + "/budget/" + id, {
-      method: "DELETE"
-    });
+    fetch(API + "/budget/" + id, { method: "DELETE" });
   }
 
- 
-
   saveBtn.addEventListener("click", saveBudget);
-
   loadBudgets();
 </script>
 
