@@ -3,143 +3,199 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget Planner Pro</title>
+  <title>Nexus Budget | Dashboard</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+    .custom-shadow { box-shadow: 0 20px 50px -12px rgba(79, 70, 229, 0.1); }
+  </style>
 </head>
 
-<body class="bg-[#f0f2f5] p-6 md:p-12 font-sans">
+<body class="bg-slate-50 min-h-screen text-slate-900 overflow-x-hidden">
 
-  <div class="max-w-[450px] mx-auto bg-white p-6 rounded-2xl shadow-2xl border border-gray-100">
-    <h2 class="text-center text-indigo-600 text-3xl font-extrabold mb-6 tracking-tight">Budget Planner</h2>
+  <div id="toast" class="fixed top-6 right-6 z-50 transform translate-x-80 opacity-0 transition-all">
+    <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+        <span id="toastMsg">Success!</span>
+    </div>
+  </div>
 
-    <div class="space-y-3">
-        <input id="name" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Expense Name" />
-        <input id="amount" type="number" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Amount ($)" />
-        <input id="interest" class="w-full p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all" placeholder="Notes/Interest" />
+  <div class="max-w-2xl mx-auto py-12 px-6">
+    
+    <header class="mb-10 flex justify-between items-end">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Nexus <span class="text-indigo-600">Budget.</span></h1>
+            <p class="text-slate-500 font-medium">Manage your portfolio and expenses.</p>
+        </div>
+        <div class="text-right">
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Balance</span>
+            <div id="totalDisplay" class="text-3xl font-black text-slate-900">$0.00</div>
+        </div>
+    </header>
 
-        <button id="saveBtn" class="flex items-center justify-center gap-2 w-full p-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:bg-indigo-300">
-            <span id="btnText">Save Budget</span>
-            <svg id="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+    <section class="glass border border-white p-8 rounded-[2rem] custom-shadow mb-10">
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+            <span class="w-2 h-6 bg-indigo-600 rounded-full"></span> New Entry
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Label</label>
+                <input id="name" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="e.g. S&P 500" />
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Amount</label>
+                <input id="amount" type="number" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="0.00" />
+            </div>
+        </div>
+
+        <div class="mt-4 space-y-1">
+            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Interest / Growth Rate (%)</label>
+            <input id="interest" class="w-full bg-slate-100 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all" placeholder="Optional notes or %" />
+        </div>
+
+        <button id="saveBtn" class="group mt-8 w-full bg-indigo-600 hover:bg-slate-900 text-white p-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all">
+            <span id="btnText">Execute Transaction</span>
+            <div id="spinner" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         </button>
-    </div>
+    </section>
 
-    <div class="mt-8 p-4 bg-slate-800 rounded-xl text-white flex justify-between items-center shadow-inner">
-        <span class="text-sm font-medium text-slate-400 uppercase tracking-widest">Total Spent</span>
-        <span id="totalDisplay" class="text-2xl font-black text-emerald-400">$0</span>
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold">Recent Activity</h3>
+        <span id="itemCount" class="text-xs bg-slate-200 px-3 py-1 rounded-full font-bold text-slate-600">0 Items</span>
     </div>
-
-    <div id="list" class="mt-6 space-y-4"></div>
+    
+    <div id="list" class="space-y-4">
+        <div id="emptyState" class="text-center py-20 opacity-50">
+            <p class="text-slate-400">No transactions recorded yet.</p>
+        </div>
+    </div>
   </div>
 
 <script>
   const API = "https://budget-planner-api.budget-planner-api.workers.dev";
-
-  const nameInput = document.getElementById("name");
-  const amountInput = document.getElementById("amount");
-  const interestInput = document.getElementById("interest");
-  const list = document.getElementById("list");
-  const saveBtn = document.getElementById("saveBtn");
-  const btnText = document.getElementById("btnText");
-  const spinner = document.getElementById("spinner");
-  const totalDisplay = document.getElementById("totalDisplay");
+  const elements = {
+    name: document.getElementById("name"),
+    amount: document.getElementById("amount"),
+    interest: document.getElementById("interest"),
+    list: document.getElementById("list"),
+    saveBtn: document.getElementById("saveBtn"),
+    btnText: document.getElementById("btnText"),
+    spinner: document.getElementById("spinner"),
+    total: document.getElementById("totalDisplay"),
+    empty: document.getElementById("emptyState"),
+    count: document.getElementById("itemCount"),
+    toast: document.getElementById("toast")
+  };
 
   let currentTotal = 0;
 
-  // --- ANIMATIONS ---
+  // --- UI FX ---
 
-  function animateTotal(newTotal) {
+  function showToast(msg) {
+    document.getElementById("toastMsg").innerText = msg;
+    anime.timeline()
+      .add({
+        targets: elements.toast,
+        translateX: [100, 0],
+        opacity: [0, 1],
+        easing: 'easeOutElastic(1, .8)',
+        duration: 800
+      })
+      .add({
+        targets: elements.toast,
+        translateX: 100,
+        opacity: 0,
+        delay: 2000,
+        easing: 'easeInBack'
+      });
+  }
+
+  function animateTotalChange(newTotal) {
     const obj = { val: currentTotal };
     anime({
       targets: obj,
       val: newTotal,
       round: 1,
-      duration: 600,
+      duration: 1000,
       easing: 'easeOutExpo',
-      update: () => {
-        totalDisplay.innerHTML = `$${obj.val}`;
-      }
+      update: () => { elements.total.innerHTML = `$${obj.val.toLocaleString()}`; }
     });
     currentTotal = newTotal;
   }
 
-  function animateListIn() {
-    anime({
-      targets: '.item',
-      opacity: [0, 1],
-      translateX: [-20, 0],
-      delay: anime.stagger(100),
-      easing: 'easeOutElastic(1, .8)'
-    });
-  }
+  // --- CORE ACTIONS ---
 
-  async function animateDelete(el) {
-    await anime({
-      targets: el,
-      opacity: 0,
-      translateX: 50,
-      duration: 300,
-      easing: 'easeInQuint'
-    }).finished;
-
-    await anime({
-      targets: el,
-      height: 0,
-      marginTop: 0,
-      marginBottom: 0,
-      padding: 0,
-      duration: 300,
-      easing: 'easeInOutQuad'
-    }).finished;
-    
-    el.remove();
-  }
-
-  // --- CORE LOGIC ---
-
-  function createItemHTML(budget, pending = false) {
+  function createItemHTML(budget) {
     return `
-      <div class="item ${pending ? "opacity-50" : ""} group p-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:shadow-md transition-all" data-id="${budget.id}">
-        <div class="flex justify-between items-center">
-            <div class="flex flex-col">
-                <strong class="text-slate-800 text-lg leading-tight">${budget.name}</strong> 
-                <small class="text-slate-500 italic mt-1 text-xs">${budget.interest || 'No notes'}</small>
+      <div class="item glass group p-5 rounded-[1.5rem] border border-white flex justify-between items-center transition-all hover:scale-[1.02] hover:shadow-xl" data-id="${budget.id}">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
             </div>
-            <div class="text-right">
-                <span class="block text-xl font-black text-indigo-600">$${budget.amount}</span>
-                <button class="text-xs text-red-400 hover:text-red-600 font-bold uppercase tracking-tighter mt-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteBudget('${budget.id}', ${budget.amount})">
-                  Remove
-                </button>
+            <div>
+                <p class="font-bold text-slate-800">${budget.name}</p>
+                <p class="text-xs text-slate-400 font-medium">${budget.interest || 'Immediate'}</p>
             </div>
+        </div>
+        <div class="text-right">
+            <p class="text-lg font-black text-slate-900">$${Number(budget.amount).toLocaleString()}</p>
+            <button onclick="deleteBudget('${budget.id}', ${budget.amount})" class="text-[10px] font-bold text-red-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all cursor-pointer">Delete</button>
         </div>
       </div>
     `;
   }
 
-  function setButtonLoading(isLoading) {
-    saveBtn.disabled = isLoading;
-    if (isLoading) {
-        btnText.innerText = "Saving...";
-        spinner.classList.remove('hidden');
+  async function loadBudgets() {
+    const res = await fetch(API + "/budget?ts=" + Date.now());
+    const data = await res.json();
+    
+    elements.list.innerHTML = "";
+    let total = 0;
+
+    if(data.length > 0) {
+        elements.empty.style.display = 'none';
+        data.forEach(item => {
+            total += Number(item.amount);
+            elements.list.insertAdjacentHTML("beforeend", createItemHTML(item));
+        });
+        
+        anime({
+            targets: '.item',
+            opacity: [0, 1],
+            translateY: [20, 0],
+            delay: anime.stagger(100),
+            easing: 'easeOutElastic(1, .8)'
+        });
     } else {
-        btnText.innerText = "Save Budget";
-        spinner.classList.add('hidden');
+        elements.list.appendChild(elements.empty);
+        elements.empty.style.display = 'block';
     }
+
+    elements.count.innerText = `${data.length} Items`;
+    animateTotalChange(total);
   }
 
   async function saveBudget() {
-    if (!nameInput.value || !amountInput.value) return;
+    if (!elements.name.value || !elements.amount.value) {
+        showToast("Fill required fields");
+        return;
+    }
 
-    setButtonLoading(true);
+    elements.saveBtn.disabled = true;
+    elements.btnText.innerText = "Processing...";
+    elements.spinner.classList.remove('hidden');
 
     const payload = {
-      name: nameInput.value,
-      amount: Number(amountInput.value),
-      interest: interestInput.value
+      name: elements.name.value,
+      amount: Number(elements.amount.value),
+      interest: elements.interest.value
     };
 
     try {
@@ -151,46 +207,35 @@
 
       if (!res.ok) throw new Error();
       
-      // Success: Reload everything to get the real database ID
+      showToast("Transaction Successful");
+      elements.name.value = elements.amount.value = elements.interest.value = "";
       await loadBudgets();
-      
-      // Clear inputs
-      [nameInput, amountInput, interestInput].forEach(i => i.value = "");
     } catch {
-      alert("Error saving budget");
+      showToast("System Error");
     } finally {
-      setButtonLoading(false);
+      elements.saveBtn.disabled = false;
+      elements.btnText.innerText = "Execute Transaction";
+      elements.spinner.classList.add('hidden');
     }
-  }
-
-  async function loadBudgets() {
-    const res = await fetch(API + "/budget?ts=" + Date.now());
-    const data = await res.json();
-
-    let total = 0;
-    list.innerHTML = "";
-    
-    data.forEach(budget => {
-      total += Number(budget.amount);
-      list.insertAdjacentHTML("beforeend", createItemHTML(budget));
-    });
-    
-    animateTotal(total);
-    animateListIn();
   }
 
   async function deleteBudget(id, amount) {
     const el = document.querySelector(`[data-id="${id}"]`);
-    if (!el) return;
-
-    // Update total immediately for better feel
-    animateTotal(currentTotal - amount);
-    await animateDelete(el);
     
+    await anime({
+        targets: el,
+        scale: 0.9,
+        opacity: 0,
+        translateX: 100,
+        duration: 400,
+        easing: 'easeInBack'
+    }).finished;
+
     await fetch(API + "/budget/" + id, { method: "DELETE" });
+    loadBudgets();
   }
 
-  saveBtn.addEventListener("click", saveBudget);
+  elements.saveBtn.addEventListener("click", saveBudget);
   loadBudgets();
 </script>
 
