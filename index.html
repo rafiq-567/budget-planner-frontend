@@ -28,7 +28,7 @@
     
     <header class="mb-10 flex justify-between items-end">
         <div>
-            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Nexus <span class="text-indigo-600">Budget.</span></h1>
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Nexus <span class="text-indigo-700">Budget.</span></h1>
             <p class="text-slate-500 font-medium">Manage your expenses.</p>
         </div>
         <div class="text-right">
@@ -39,7 +39,7 @@
 
     <section class="glass border border-white p-8 rounded-[2rem] custom-shadow mb-10">
         <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
-            <span class="w-2 h-6 bg-indigo-600 rounded-full"></span> New Entry
+             New Entry
         </h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -59,14 +59,14 @@
         </div>
 
         <button id="saveBtn" class="group mt-8 w-full bg-indigo-600 hover:bg-slate-900 text-white p-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all">
-            <span id="btnText">Execute Transaction</span>
+            <span id="btnText">Add Budget</span>
             <div id="spinner" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         </button>
     </section>
 
     <div class="flex items-center justify-between mb-6">
         <h3 class="text-xl font-bold">Recent Activity</h3>
-        <span id="itemCount" class="text-xs bg-slate-200 px-3 py-1 rounded-full font-bold text-slate-600">0 Items</span>
+        <span id="itemCount" class="text-xs bg-slate-200 px-3 py-1 rounded-full border border-gray-200 font-bold text-slate-600">0 Items</span>
     </div>
     
     <div id="list" class="space-y-4">
@@ -94,7 +94,7 @@
 
   let currentTotal = 0;
 
-  // --- UI FX ---
+ 
 
   function showToast(msg) {
     document.getElementById("toastMsg").innerText = msg;
@@ -128,7 +128,7 @@
     currentTotal = newTotal;
   }
 
-  // --- CORE ACTIONS ---
+  
 
   function createItemHTML(budget) {
     return `
