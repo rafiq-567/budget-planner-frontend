@@ -13,7 +13,6 @@
     body { font-family: 'Inter', sans-serif; }
     .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     .custom-shadow { box-shadow: 0 20px 50px -12px rgba(79, 70, 229, 0.1); }
-    /* Prevent horizontal scroll during shake */
     .shake-container { will-change: transform; }
   </style>
 </head>
@@ -41,7 +40,7 @@
 
     <section id="entryCard" class="glass border border-white p-8 rounded-[2rem] custom-shadow mb-10 shake-container">
         <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-700">
-            <span class="w-2 h-6 bg-indigo-600 rounded-full"></span> New Entry
+             New Entry
         </h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -97,12 +96,10 @@
 
   let currentTotal = 0;
 
-  // --- ANIMATIONS ---
 
   function showToast(msg) {
     document.getElementById("toastMsg").innerText = msg;
     
-    // Stop any current animation to prevent getting stuck
     anime.remove(elements.toast);
 
     anime.timeline()
@@ -124,7 +121,6 @@
   }
 
   function shakeInputs() {
-    // Advanced shake animation using keyframes
     anime({
       targets: elements.entryCard,
       translateX: [
@@ -154,7 +150,6 @@
     currentTotal = newTotal;
   }
 
-  // --- CORE LOGIC ---
 
   function createItemHTML(budget) {
     return `
@@ -209,14 +204,12 @@
   }
 
   async function saveBudget() {
-    // 1. Validation & Shake
     if (!elements.name.value || !elements.amount.value) {
         shakeInputs();
         showToast("Please fill Name and Amount");
         return;
     }
 
-    // 2. Button State
     elements.saveBtn.disabled = true;
     elements.btnText.innerText = "Processing...";
     elements.spinner.classList.remove('hidden');
